@@ -48,6 +48,23 @@
 - **채점**: `backend/check_service.py`, `backend/prompts.py`
 - **데이터 연동**: 공공데이터포털(NEC) 당선인·선거공약 API (`backend/national_assembly_api.py`, `backend/public_data_api.py`)
 
+## 🔌 데이터 출처 & 연동 API
+
+공약 생성은 단순 GPT 호출이 아니라 **실제 공공데이터·의정자료에 근거**합니다. 리서치 어시스턴트가 주제·지역에 맞춰 아래 공개 API를 호출해 근거를 수집한 뒤, OpenAI로 초안을 생성하고 인용까지 붙입니다.
+
+| 출처 | 용도 | 엔드포인트 · 키 |
+|------|------|-----------------|
+| **OpenAI API** | 임베딩 · Vector Store(File Search) · GPT 초안 생성·채점 | `OPENAI_API_KEY` |
+| **국회 지방의회 의정포털 (CLIK)** | 지방·광역의회 의정자료·안건 | `clik.nanet.go.kr/openapi` · `ASSEMBLY_API_KEY` |
+| **국회 발언 빅데이터 (NANET)** | 의원 발언 검색 | `dataset.nanet.go.kr/api` · `SPEECH_API_KEY` |
+| **중앙선관위 (NEC)** | 당선인 정보 · 선거공약 정보 | `apis.data.go.kr/9760000` · `DATA_GO_KR_API_KEY` |
+| **소상공인 상권정보 (SEMAS)** | 지역 상권 통계 | `apis.data.go.kr/B553077` (data.go.kr) |
+| **도로교통공단 TAAS** | 교통사고 통계 | `apis.data.go.kr/B552061` · `opendata.koroad.or.kr` |
+| **통계청 KOSIS** | 국가통계 지표 | `kosis.kr/openapi` |
+| **중앙여론조사심의위 (NESDC)** | 여론조사 등록자료 | `nesdc.go.kr` |
+
+> 키가 없거나 호출에 실패한 출처는 자동으로 건너뜁니다(graceful degradation) — 일부 공공 API 키 없이도 동작합니다. 생성 품질을 높이려면 `.env`에 해당 키를 설정하세요.
+
 ## 🚀 빠른 시작 (Quick start)
 
 ```bash

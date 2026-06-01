@@ -48,6 +48,23 @@ Open-sourcing it makes data-driven pledge drafting and verification — previous
 - **Grading**: `backend/check_service.py`, `backend/prompts.py`
 - **Public data**: Korea NEC winners/pledge APIs (`backend/national_assembly_api.py`, `backend/public_data_api.py`)
 
+## 🔌 Data sources & external APIs
+
+Pledge generation is **grounded in real public data and legislative records**, not a bare GPT call. For a given topic and region, the research assistant queries the public APIs below to gather evidence, then OpenAI drafts the text with citations.
+
+| Source | Use | Endpoint · key |
+|--------|-----|----------------|
+| **OpenAI API** | Embeddings · Vector Store (File Search) · GPT drafting & grading | `OPENAI_API_KEY` |
+| **National Assembly Local-Council Portal (CLIK)** | Local/metro council records & agenda | `clik.nanet.go.kr/openapi` · `ASSEMBLY_API_KEY` |
+| **NANET Speech Big-Data** | Legislator speech search | `dataset.nanet.go.kr/api` · `SPEECH_API_KEY` |
+| **National Election Commission (NEC)** | Winners & pledge information | `apis.data.go.kr/9760000` · `DATA_GO_KR_API_KEY` |
+| **SEMAS commercial-district data** | Local commercial statistics | `apis.data.go.kr/B553077` (data.go.kr) |
+| **KOROAD TAAS** | Traffic-accident statistics | `apis.data.go.kr/B552061` · `opendata.koroad.or.kr` |
+| **KOSIS** | National statistics indicators | `kosis.kr/openapi` |
+| **NESDC** | Registered opinion-poll data | `nesdc.go.kr` |
+
+> Sources with a missing key or failed call are skipped automatically (graceful degradation) — the app runs without some public-API keys. Set the keys in `.env` to improve generation quality.
+
 ## 🚀 Quick start
 
 ```bash
