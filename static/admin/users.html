@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>사용자 관리 - 공약 멘토링</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Pretendard Variable", "Pretendard", "Noto Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+      background: linear-gradient(160deg, #04162b 0%, #073053 55%, #0a3b69 100%);
+      min-height: 100vh; color: #e2e8f0; padding: 2rem;
+    }
+    .wrap { max-width: 1600px; margin: 0 auto; }
+    h1 { font-size: 1.5rem; margin-bottom: 1rem; color: #f8fafc; }
+    .card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(148,163,184,0.18);
+      border-radius: 18px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { border-collapse: collapse; min-width: 800px; width: max-content; }
+    th, td { padding: 0.6rem 0.75rem; text-align: left; border-bottom: 1px solid rgba(148,163,184,0.2); white-space: nowrap; }
+    /* 컬럼별 최소 너비 */
+    th:nth-child(1), td:nth-child(1) { min-width: 80px; }   /* 이름 */
+    th:nth-child(2), td:nth-child(2) { min-width: 110px; }  /* 전화번호 */
+    th:nth-child(3), td:nth-child(3) { min-width: 180px; white-space: normal; word-break: break-all; } /* 이메일 */
+    th:nth-child(4), td:nth-child(4) { min-width: 150px; white-space: normal; word-break: keep-all; } /* 출마/선거구 */
+    th:nth-child(5), td:nth-child(5) { min-width: 60px; }   /* 확인 */
+    th:nth-child(6), td:nth-child(6) { min-width: 80px; }   /* 상태 */
+    th:nth-child(7), td:nth-child(7) { min-width: 60px; }   /* 역할 */
+    th:nth-child(8), td:nth-child(8) { min-width: 90px; }   /* 가입일 */
+    th:nth-child(9), td:nth-child(9) { min-width: 180px; }  /* 액션 버튼 */
+    @media (max-width: 640px) {
+      body { padding: 1rem; }
+      .card { padding: 1rem; border-radius: 14px; }
+      h1 { font-size: 1.25rem; }
+    }
+    .status { padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.85rem; display: inline-block; }
+    .PENDING { background: rgba(251,191,36,0.3); }
+    .APPROVED { background: rgba(34,197,94,0.3); }
+    .REJECTED { background: rgba(239,68,68,0.3); }
+    .SUSPENDED { background: rgba(148,163,184,0.3); }
+
+    button {
+      padding: 0.35rem 0.6rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.85rem;
+      margin-right: 0.3rem;
+      margin-bottom: 0.2rem;
+    }
+    .btn-approve { background: #22c55e; color: #fff; }
+    .btn-reject { background: #ef4444; color: #fff; }
+    .btn-suspend { background: #94a3b8; color: #fff; }
+    .btn-delete  { background: #111827; color: #fff; border: 1px solid rgba(148,163,184,0.35); }
+
+    .links { margin-bottom: 1rem; }
+    .links a { color: #ffb37a; text-decoration: none; font-weight: 700; }
+    .muted { color: rgba(226,232,240,0.75); font-size: 0.9rem; margin-top: 0.5rem; }
+    .btn-edit { background: #3b82f6; color: #fff; }
+    .btn-upload { background: #ff7210; color: #fff; padding: 0.5rem 1rem; font-size: 0.95rem; }
+    .upload-bar { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .upload-bar .info { font-size: 0.85rem; color: rgba(226,232,240,0.7); }
+    .badge-verified { background: rgba(34,197,94,0.3); color: #4ade80; padding: 0.15rem 0.45rem; border-radius: 5px; font-size: 0.8rem; display: inline-block; cursor: default; }
+    .badge-unverified { background: rgba(239,68,68,0.3); color: #f87171; padding: 0.15rem 0.45rem; border-radius: 5px; font-size: 0.8rem; display: inline-block; cursor: default; }
+    .badge-unchecked { background: rgba(148,163,184,0.3); color: #94a3b8; padding: 0.15rem 0.45rem; border-radius: 5px; font-size: 0.8rem; display: inline-block; cursor: default; }
+
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      z-index: 1000; align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #0f172a; border: 1px solid rgba(148,163,184,0.3);
+      border-radius: 18px; padding: 1.5rem; width: 90%; max-width: 480px;
+      color: #e2e8f0;
+    }
+    .modal h2 { font-size: 1.2rem; margin-bottom: 1rem; color: #f8fafc; }
+    .modal label { display: block; font-weight: 700; margin-bottom: 0.35rem; font-size: 0.9rem; }
+    .modal select, .modal input[type="text"] {
+      width: 100%; padding: 0.6rem 0.75rem; border-radius: 10px;
+      border: 1px solid rgba(148,163,184,0.28); background: rgba(0,0,0,0.22);
+      color: #fff; margin-bottom: 1rem; font-size: 1rem;
+    }
+    .modal-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.5rem; }
+    .modal-actions button { padding: 0.5rem 1rem; }
+    .btn-save { background: #ff7210; color: #fff; }
+    .btn-cancel { background: rgba(148,163,184,0.2); color: #e2e8f0; }
+  </style>
+  <link rel="stylesheet" href="/static/reform-redesign.css" />
+</head>
+<body class="rf-admin-page">
+  <div class="wrap">
+    <div class="links"><a href="/admin">← 관리자</a></div>
+    <h1>사용자 관리</h1>
+    <div class="card" style="padding: 1rem 1.5rem;">
+      <div class="upload-bar">
+        <input type="file" id="applicantFile" accept=".xlsx" style="display:none" />
+        <button class="btn-upload" onclick="document.getElementById('applicantFile').click()">📎 지원서 엑셀 업로드</button>
+        <button class="btn-upload" style="background:#3b82f6;" onclick="doReverify()">🔄 전원 재검증</button>
+        <span class="info" id="uploadStatus"></span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>이름</th>
+            <th>전화번호</th>
+            <th>이메일</th>
+            <th>출마/선거구</th>
+            <th>확인</th>
+            <th>상태</th>
+            <th>역할</th>
+            <th>가입일</th>
+            <th>승인/거절/중지/삭제</th>
+          </tr>
+        </thead>
+        <tbody id="list"></tbody>
+      </table>
+      </div><!-- /.table-scroll -->
+      <div class="muted">
+        삭제는 하드삭제(되돌릴 수 없음)로 처리됩니다. 삭제 전 반드시 확인하십시오.
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="editModal">
+    <div class="modal">
+      <h2>출마 정보 수정</h2>
+      <input type="hidden" id="edit_user_id" />
+      <label>가입 유형</label>
+      <select id="edit_position">
+        <option value="">선택하세요</option>
+        <option value="metro_mayor">광역 단체장</option>
+        <option value="regional_council">광역 의원</option>
+        <option value="local_mayor">기초 단체장</option>
+        <option value="local_council">기초 의원</option>
+        <option value="party_official">당직자</option>
+      </select>
+      <label>시·도</label>
+      <select id="edit_region">
+        <option value="">선택하세요</option>
+      </select>
+      <div id="edit_district_block">
+        <label>선거구</label>
+        <select id="edit_district">
+          <option value="">선택하세요</option>
+        </select>
+        <div id="edit_sub_wrap" style="display:none;">
+          <label>세부선거구</label>
+          <select id="edit_sub">
+            <option value="">선택하세요</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeEditModal()">취소</button>
+        <button class="btn-save" onclick="saveUserProfile()">저장</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function escapeHtml(s) {
+      return String(s ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function ymd(s) {
+      const t = String(s ?? '');
+      return t.length >= 10 ? t.slice(0, 10) : t;
+    }
+    const ELECTION_LABEL = { metro_mayor: '광역 단체장', regional_council: '광역 의원', local_mayor: '기초 단체장', local_council: '기초 의원', party_official: '당직자' };
+    function verifyBadge(u) {
+      const v = u.applicant_verified;
+      const note = escapeHtml(u.applicant_match_note || '');
+      if (v === 1) return `<span class="badge-verified" title="${note}">확인됨</span>`;
+      if (v === -1) return `<span class="badge-unverified" title="${note}">미확인</span>`;
+      return `<span class="badge-unchecked" title="검증 전">-</span>`;
+    }
+    function formatElection(u) {
+      const ep = ELECTION_LABEL[u.election_position] || u.election_position || '-';
+      const rn = (u.region_name || '').trim();
+      const dn = (u.district_name || '').trim();
+      if (!rn) return ep;
+      if (!dn) return ep + ' / ' + rn;
+      return ep + ' / ' + rn + ' ' + dn;
+    }
+
+    (async () => {
+      const r = await fetch('/api/admin/users', { credentials: 'include' });
+      if (!r.ok) {
+        if (r.status === 401) window.location.href = '/login?next=' + encodeURIComponent(location.pathname);
+        else alert('목록을 불러오지 못했습니다.');
+        return;
+      }
+
+      const d = await r.json();
+      _usersCache = d.users || [];
+      const tbody = document.getElementById('list');
+      tbody.innerHTML = '';
+
+      for (const u of _usersCache) {
+        const tr = document.createElement('tr');
+
+        const statusCls = (u.status || 'PENDING');
+        const name = escapeHtml(u.name || '-');
+        const phone = escapeHtml(u.phone || '-');
+        const email = escapeHtml(u.email || '');
+        const role = escapeHtml(u.role || 'USER');
+        const created = escapeHtml(ymd(u.created_at || ''));
+
+        const actions = buildActionsHtml(u);
+        const election = escapeHtml(formatElection(u));
+
+        const verify = verifyBadge(u);
+
+        tr.innerHTML =
+          `<td>${name}</td>` +
+          `<td>${phone}</td>` +
+          `<td>${email}</td>` +
+          `<td>${election}</td>` +
+          `<td>${verify}</td>` +
+          `<td><span class="status ${escapeHtml(statusCls)}">${escapeHtml(statusCls)}</span></td>` +
+          `<td>${role}</td>` +
+          `<td>${created}</td>` +
+          `<td>${actions}</td>`;
+
+        tbody.appendChild(tr);
+      }
+    })();
+
+    let _usersCache = [];
+
+    function buildActionsHtml(u) {
+      const id = Number(u.id);
+      const status = String(u.status || 'PENDING');
+      const role = String(u.role || 'USER');
+
+      const delBtn = `<button class="btn-delete" onclick="deleteUser(${id})">삭제</button>`;
+      const editBtn = `<button class="btn-edit" onclick="openEditModal(${id})">수정</button>`;
+
+      if (role === 'ADMIN') {
+        return `<span class="muted">관리자 계정</span>`;
+      }
+
+      if (status === 'PENDING') {
+        return `
+          <button class="btn-approve" onclick="setStatus(${id}, 'APPROVED')">승인</button>
+          <button class="btn-reject" onclick="setStatus(${id}, 'REJECTED')">거절</button>
+          ${editBtn} ${delBtn}
+        `;
+      }
+      if (status === 'APPROVED') {
+        return `
+          <button class="btn-suspend" onclick="setStatus(${id}, 'SUSPENDED')">중지</button>
+          ${editBtn} ${delBtn}
+        `;
+      }
+      if (status === 'SUSPENDED' || status === 'REJECTED') {
+        return `
+          <button class="btn-approve" onclick="setStatus(${id}, 'APPROVED')">승인</button>
+          ${editBtn} ${delBtn}
+        `;
+      }
+      return `${editBtn} ${delBtn}`;
+    }
+
+    async function setStatus(userId, status) {
+      const r = await fetch('/api/admin/users/approve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, status, note: '' }),
+        credentials: 'include'
+      });
+
+      if (r.ok) location.reload();
+      else {
+        let msg = '처리 실패';
+        try { msg = (await r.json()).detail || msg; } catch (_) {}
+        alert(msg);
+      }
+    }
+
+    async function deleteUser(userId) {
+      // 2중 확인(실수 방지)
+      const c1 = confirm('정말 삭제하시겠습니까?\n삭제는 되돌릴 수 없습니다.');
+      if (!c1) return;
+
+      const typed = prompt('하드삭제를 진행하려면 DELETE 를 입력하십시오.');
+      if (typed !== 'DELETE') {
+        alert('취소되었습니다.');
+        return;
+      }
+
+      const r = await fetch('/api/admin/users/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId }),
+        credentials: 'include'
+      });
+
+      if (r.ok) location.reload();
+      else {
+        let msg = '삭제 실패';
+        try { msg = (await r.json()).detail || msg; } catch (_) {}
+        alert(msg);
+      }
+    }
+
+    // ── 사용자 출마정보 수정 모달 ──
+    const editModal = document.getElementById('editModal');
+    const editUserId = document.getElementById('edit_user_id');
+    const editPos = document.getElementById('edit_position');
+    const editRegion = document.getElementById('edit_region');
+    const editDistrict = document.getElementById('edit_district');
+    const editDistrictBlock = document.getElementById('edit_district_block');
+    const editSubWrap = document.getElementById('edit_sub_wrap');
+    const editSub = document.getElementById('edit_sub');
+
+    (async () => {
+      try {
+        const r = await fetch('/api/signup/regions');
+        const data = await r.json();
+        if (Array.isArray(data)) {
+          editRegion.innerHTML = '<option value="">선택하세요</option>' +
+            data.map(x => `<option value="${escapeHtml(x.region_code||'')}" data-name="${escapeHtml(x.region_name||'')}">${escapeHtml(x.region_name||'')}</option>`).join('');
+        }
+      } catch (e) { console.error(e); }
+    })();
+
+    function openEditModal(userId) {
+      const u = _usersCache.find(x => x.id === userId);
+      if (!u) return;
+      editUserId.value = userId;
+      editPos.value = u.election_position || '';
+      editRegion.value = u.region_code || '';
+      editDistrict.innerHTML = '<option value="">선택하세요</option>';
+      editSub.innerHTML = '<option value="">선택하세요</option>';
+      editSubWrap.style.display = 'none';
+      updateDistrictBlockVisibility();
+      if (u.region_code && editPos.value !== 'metro_mayor' && editPos.value !== 'party_official') {
+        loadEditDistricts(u.region_code).then(() => {
+          const dc = (u.district_code || '').trim();
+          if (dc) {
+            const parts = dc.split(':');
+            const baseDc = parts.length >= 2 ? parts.slice(0, 2).join(':') : dc;
+            const subCode = parts.length >= 3 ? parts.slice(2).join(':') : '';
+            for (let i = 0; i < editDistrict.options.length; i++) {
+              if (editDistrict.options[i].value === baseDc || editDistrict.options[i].value === dc) {
+                editDistrict.selectedIndex = i;
+                // 하위 선거구(가/나/다) 드롭다운 로드를 위해 change 이벤트 발생
+                loadEditDistrictSub(baseDc, subCode);
+                break;
+              }
+            }
+          }
+        });
+      }
+      editModal.classList.add('open');
+    }
+
+    function closeEditModal() {
+      editModal.classList.remove('open');
+    }
+
+    function updateDistrictBlockVisibility() {
+      const pos = (editPos.value || '').toLowerCase();
+      if (pos === 'metro_mayor' || pos === 'party_official') {
+        editDistrictBlock.style.display = 'none';
+      } else {
+        editDistrictBlock.style.display = 'block';
+      }
+    }
+
+    editPos.addEventListener('change', () => {
+      updateDistrictBlockVisibility();
+      if (editPos.value === 'party_official') {
+        editRegion.value = '';
+      }
+      if (editRegion.value && editPos.value !== 'metro_mayor' && editPos.value !== 'party_official') {
+        loadEditDistricts(editRegion.value);
+      }
+    });
+
+    editRegion.addEventListener('change', () => {
+      editDistrict.innerHTML = '<option value="">선택하세요</option>';
+      editSub.innerHTML = '<option value="">선택하세요</option>';
+      editSubWrap.style.display = 'none';
+      if (editRegion.value && editPos.value !== 'metro_mayor' && editPos.value !== 'party_official') {
+        loadEditDistricts(editRegion.value);
+      }
+    });
+
+    async function loadEditDistricts(regionCode) {
+      const pos = editPos.value || '';
+      try {
+        const r = await fetch('/api/signup/districts?region_code=' + encodeURIComponent(regionCode) + '&election_position=' + encodeURIComponent(pos));
+        const data = await r.json();
+        const list = Array.isArray(data) ? data : [];
+        editDistrict.innerHTML = '<option value="">선택하세요</option>' +
+          list.map(x => `<option value="${escapeHtml(x.district_code||'')}">${escapeHtml(x.district_name||'')}</option>`).join('');
+      } catch (e) { console.error(e); }
+    }
+
+    // 하위 선거구 로드 (모달 열기 시 & 드롭다운 변경 시 공용)
+    function loadEditDistrictSub(dc, preselectSub) {
+      editSub.innerHTML = '<option value="">선택하세요</option>';
+      editSubWrap.style.display = 'none';
+      if (!dc) return;
+      const pos = (editPos.value || '').trim();
+      fetch('/api/signup/district-sub?district_code=' + encodeURIComponent(dc) + '&election_position=' + encodeURIComponent(pos))
+        .then(r => r.json())
+        .then(list => {
+          let arr = Array.isArray(list) ? list : [];
+          if (arr.length > 1) arr = arr.filter(x => (x.sub_code||'').trim() !== '단독');
+          editSub.innerHTML = '<option value="">선택하세요</option>' +
+            arr.map(x => `<option value="${escapeHtml(x.sub_code||'')}">${escapeHtml(x.sub_name||'')}</option>`).join('');
+          if (arr.length > 1) {
+            editSubWrap.style.display = '';
+            // 기존 사용자의 하위 선거구 값이 있으면 자동 선택
+            if (preselectSub) {
+              for (let i = 0; i < editSub.options.length; i++) {
+                if (editSub.options[i].value === preselectSub) {
+                  editSub.selectedIndex = i; break;
+                }
+              }
+            }
+          } else if (arr.length === 1) {
+            editSub.selectedIndex = 1;
+          }
+        })
+        .catch(e => console.error(e));
+    }
+
+    editDistrict.addEventListener('change', () => {
+      loadEditDistrictSub((editDistrict.value || '').trim(), '');
+    });
+
+    async function saveUserProfile() {
+      const userId = parseInt(editUserId.value, 10);
+      if (!userId) return;
+      const pos = (editPos.value || '').trim();
+      const regionCode = (editRegion.value || '').trim();
+      const regionOpt = editRegion.options[editRegion.selectedIndex];
+      const regionName = regionOpt ? (regionOpt.getAttribute('data-name') || regionOpt.textContent || '').trim() : '';
+
+      let districtCode = '';
+      let districtName = '';
+      if (pos !== 'metro_mayor' && pos !== 'party_official') {
+        const dc = (editDistrict.value || '').trim();
+        const sub = (editSub.value || '').trim();
+        const dOpt = editDistrict.options[editDistrict.selectedIndex];
+        const dName = dOpt ? (dOpt.textContent || '').trim() : '';
+        const isSingle = !sub || sub === '단독';
+        districtCode = isSingle ? dc : dc + ':' + sub;
+        districtName = isSingle ? dName : (dName + ' ' + sub).trim();
+      }
+
+      try {
+        const r = await fetch('/api/admin/users/update-profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            user_id: userId,
+            election_position: pos,
+            region_code: regionCode,
+            region_name: regionName,
+            district_code: districtCode,
+            district_name: districtName,
+          }),
+        });
+        if (r.ok) {
+          closeEditModal();
+          location.reload();
+        } else {
+          let msg = '수정 실패';
+          try { msg = (await r.json()).detail || msg; } catch (_) {}
+          alert(msg);
+        }
+      } catch (e) { alert('서버 연결 실패'); }
+    }
+
+    editModal.addEventListener('click', (e) => {
+      if (e.target === editModal) closeEditModal();
+    });
+
+    // ── 지원서 엑셀 업로드 ──
+    document.getElementById('applicantFile').addEventListener('change', async (e) => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const statusEl = document.getElementById('uploadStatus');
+      statusEl.textContent = '업로드 중...';
+      const fd = new FormData();
+      fd.append('file', f);
+      try {
+        const r = await fetch('/api/admin/applicants/upload', {
+          method: 'POST',
+          body: fd,
+          credentials: 'include'
+        });
+        if (r.status === 413) { statusEl.textContent = '파일 크기 초과 (nginx 설정 확인)'; return; }
+        const text = await r.text();
+        let d;
+        try { d = JSON.parse(text); } catch (_) { statusEl.textContent = '서버 오류: ' + text.slice(0, 100); return; }
+        if (r.ok) {
+          statusEl.textContent = d.message || '완료';
+          setTimeout(() => location.reload(), 1500);
+        } else {
+          statusEl.textContent = d.detail || '업로드 실패';
+        }
+      } catch (err) {
+        statusEl.textContent = '서버 연결 실패: ' + (err.message || '');
+      }
+      e.target.value = '';
+    });
+
+    async function doReverify() {
+      const statusEl = document.getElementById('uploadStatus');
+      statusEl.textContent = '재검증 중...';
+      try {
+        const r = await fetch('/api/admin/applicants/reverify', { method: 'POST', credentials: 'include' });
+        const d = await r.json();
+        statusEl.textContent = r.ok ? (d.message || '완료') : (d.detail || '실패');
+        if (r.ok) setTimeout(() => location.reload(), 1000);
+      } catch (err) {
+        statusEl.textContent = '서버 연결 실패';
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 정책 플랫폼 | 이슈 레이더</title>
+  <link rel="stylesheet" href="/static/css/common.css">
+  <style>
+    .page-shell { padding-bottom: 3rem; }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.95rem;
+      padding: 0.1rem 0;
+    }
+    .topbar .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .topbar .links a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 32px;
+      padding: 0 0.78rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.22);
+      background: rgba(255,255,255,0.04);
+      color: #93c5fd;
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-weight: 800;
+    }
+    .topbar .links a:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(148,163,184,0.28);
+    }
+    .hero {
+      margin: 0.5rem 0 1.25rem;
+      animation: fadeUp 380ms ease-out both;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 0.25rem 0.7rem;
+      border-radius: 999px;
+      background: rgba(96,165,250,0.16);
+      color: #93c5fd;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .eyebrow::before {
+      content: "";
+      width: 0.45rem;
+      height: 0.45rem;
+      border-radius: 50%;
+      background: #60a5fa;
+      box-shadow: 0 0 0 6px rgba(96,165,250,0.12);
+    }
+    .hero h1 {
+      margin-top: 0.75rem;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      letter-spacing: -0.04em;
+      line-height: 1.05;
+      max-width: 14ch;
+    }
+    .hero p {
+      margin-top: 0.75rem;
+      max-width: 68ch;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 1rem;
+    }
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .hero-meta .badge { background: rgba(255,255,255,0.08); color: var(--muted); }
+    .workspace {
+      display: grid;
+      gap: 1rem;
+    }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .panel-header {
+      padding: 1.15rem 1.25rem 0;
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      align-items: start;
+      flex-wrap: wrap;
+    }
+    .panel-header h2 { margin-bottom: 0.35rem; }
+    .panel-header p {
+      color: var(--muted2);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      max-width: 48ch;
+    }
+    .panel-body { padding: 1.25rem; }
+    .controls {
+      display: grid;
+      grid-template-columns: 1.2fr 0.7fr 0.7fr auto;
+      gap: 0.75rem;
+      align-items: end;
+    }
+    .control-group label {
+      display: block;
+      color: var(--muted2);
+      font-size: 0.82rem;
+      margin-bottom: 0.35rem;
+    }
+    .control-group input,
+    .control-group select {
+      width: 100%;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(148,163,184,0.24);
+      color: var(--text);
+      padding: 0.58rem 0.7rem;
+      border-radius: 10px;
+      font: inherit;
+    }
+    .control-group input::placeholder { color: var(--muted3); }
+    .controls button {
+      min-height: 42px;
+      border: none;
+      border-radius: 10px;
+      padding: 0.6rem 1rem;
+      background: var(--brand);
+      color: #fff;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .controls button:hover { background: var(--brand-hover); }
+    .controls button:disabled { opacity: 0.55; cursor: not-allowed; }
+    .loading,
+    .err {
+      margin-top: 0.8rem;
+      font-size: 0.92rem;
+    }
+    .loading { color: var(--muted2); }
+    .err { color: #fecaca; display: none; }
+    .result { display: none; margin-top: 1.25rem; }
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1rem;
+      margin-bottom: 1rem;
+      color: var(--muted2);
+      font-size: 0.85rem;
+    }
+    .cache-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.12rem 0.45rem;
+      border-radius: 999px;
+      background: rgba(148,163,184,0.16);
+      color: #cbd5e1;
+      font-size: 0.74rem;
+      font-weight: 700;
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+    .summary-card {
+      padding: 0.95rem 1rem;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(148,163,184,0.12);
+    }
+    .summary-card .num {
+      display: block;
+      font-size: 1.7rem;
+      line-height: 1;
+      font-weight: 900;
+      margin-bottom: 0.25rem;
+    }
+    .summary-card .lbl {
+      color: var(--muted2);
+      font-size: 0.82rem;
+    }
+    .num-green { color: #4ade80; }
+    .num-yellow { color: #fbbf24; }
+    .num-red { color: #f87171; }
+    .num-blue { color: #60a5fa; }
+    .section-title {
+      margin: 0 0 0.75rem;
+      color: var(--muted2);
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .heatmap-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 0.75rem;
+    }
+    .heatmap-cell {
+      padding: 0.85rem;
+      border-radius: 14px;
+      text-align: left;
+      border: 1px solid rgba(148,163,184,0.15);
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+      cursor: pointer;
+      user-select: none;
+    }
+    .heatmap-cell:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 28px rgba(0,0,0,0.16);
+    }
+    .heatmap-cell:active {
+      transform: translateY(0);
+    }
+    .heatmap-topic {
+      font-size: 0.92rem;
+      font-weight: 800;
+      margin-bottom: 0.25rem;
+      word-break: keep-all;
+    }
+    .heatmap-count {
+      color: rgba(255,255,255,0.76);
+      font-size: 0.78rem;
+      line-height: 1.45;
+    }
+    .heat-green { background: rgba(74,222,128,0.18); }
+    .heat-yellow { background: rgba(251,191,36,0.18); }
+    .heat-red { background: rgba(248,113,113,0.22); }
+    .heat-gray { background: rgba(148,163,184,0.12); }
+    .gaps {
+      display: grid;
+      gap: 0.75rem;
+    }
+    .gap-item {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(148,163,184,0.12);
+      border-radius: 16px;
+      padding: 1rem 1.1rem;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .gap-item.highlighted {
+      border-color: rgba(255,122,26,0.5);
+      box-shadow: 0 0 0 1px rgba(255,122,26,0.2), 0 8px 24px rgba(255,122,26,0.08);
+    }
+    .gap-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      margin-top: 0.65rem;
+      padding: 0.35rem 0.7rem;
+      border-radius: 8px;
+      background: rgba(255,122,26,0.15);
+      color: var(--brand-light);
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-decoration: none;
+      transition: background 0.18s ease;
+    }
+    .gap-action:hover {
+      background: rgba(255,122,26,0.28);
+    }
+    .gap-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .gap-topic {
+      font-size: 1.02rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .gap-badges {
+      display: flex;
+      gap: 0.45rem;
+      flex-wrap: wrap;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.12rem 0.48rem;
+      border-radius: 999px;
+      font-size: 0.74rem;
+      font-weight: 800;
+    }
+    .badge-red { background: rgba(248,113,113,0.2); color: #fca5a5; }
+    .badge-yellow { background: rgba(251,191,36,0.2); color: #fde68a; }
+    .badge-blue { background: rgba(96,165,250,0.2); color: #93c5fd; }
+    .gap-meta {
+      margin-top: 0.55rem;
+      color: var(--muted2);
+      font-size: 0.84rem;
+    }
+    .gap-docs {
+      margin-top: 0.8rem;
+      border-top: 1px solid rgba(148,163,184,0.1);
+      padding-top: 0.65rem;
+    }
+    .gap-docs summary {
+      cursor: pointer;
+      color: #cbd5e1;
+      font-size: 0.84rem;
+      margin-bottom: 0.3rem;
+    }
+    .doc-item {
+      padding: 0.4rem 0;
+      border-bottom: 1px solid rgba(148,163,184,0.08);
+      font-size: 0.84rem;
+      line-height: 1.45;
+    }
+    .doc-item:last-child { border-bottom: none; }
+    .doc-type { color: var(--muted2); }
+    .doc-score { color: #fbbf24; font-size: 0.78rem; }
+    .empty {
+      margin-top: 1rem;
+      color: var(--muted2);
+      font-size: 0.9rem;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media (max-width: 960px) {
+      .controls { grid-template-columns: 1fr 1fr; }
+      .controls button { grid-column: 1 / -1; }
+      .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 640px) {
+      .panel-header, .panel-body { padding-left: 1rem; padding-right: 1rem; }
+      .controls { grid-template-columns: 1fr; }
+      .summary-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap-xl page-shell">
+    <div class="topbar">
+      <div class="links">
+        <a href="/admin">관리자 홈</a>
+        <a href="/hub/archive">정책 자료허브</a>
+      </div>
+      <span class="badge badge-blue">운영 대시보드</span>
+    </div>
+
+    <section class="hero">
+      <span class="eyebrow">AI 정책 플랫폼 | 이슈 레이더</span>
+      <h1>지금 부족한 정책 주제를 한눈에 훑습니다.</h1>
+      <p>문서와 공약의 커버리지를 집계해, 비어 있는 주제와 약한 구간을 빠르게 찾는 운영 화면입니다. 필터를 걸고 다시 스캔하면 우선순위가 즉시 갱신됩니다.</p>
+      <div class="hero-meta">
+        <span class="badge badge-green">커버리지 요약</span>
+        <span class="badge badge-yellow">약한 구간</span>
+        <span class="badge badge-red">무공약 영역</span>
+      </div>
+    </section>
+
+    <section class="workspace">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2>스캔 조건</h2>
+            <p>문서 유형과 기간을 좁히면 이슈 분포를 더 정확하게 읽을 수 있습니다.</p>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="controls">
+            <div class="control-group">
+              <label for="docType">문서 유형</label>
+              <select id="docType">
+                <option value="">전체 문서</option>
+                <option value="bill">법안</option>
+                <option value="statement">성명·발언</option>
+                <option value="press_release">보도자료</option>
+                <option value="message">메시지</option>
+                <option value="meeting">회의록</option>
+                <option value="rule">규정</option>
+              </select>
+            </div>
+            <div class="control-group">
+              <label for="days">조회 기간</label>
+              <input type="number" id="days" placeholder="예: 30" min="1" max="365">
+            </div>
+            <div class="control-group">
+              <label for="refreshHint">갱신</label>
+              <input id="refreshHint" type="text" value="최근 데이터 재조회" disabled>
+            </div>
+            <button id="scanBtn" onclick="doScan()">다시 스캔</button>
+          </div>
+          <p class="loading" id="loadingMsg">데이터를 불러오는 중입니다...</p>
+          <p class="err" id="errMsg"></p>
+
+          <div class="result" id="result">
+            <div class="meta-row" id="metaRow"></div>
+            <div class="summary-grid" id="summaryCards"></div>
+
+            <div style="margin-bottom:1.25rem;">
+              <div class="section-title">주제별 커버리지</div>
+              <div id="heatmap"></div>
+            </div>
+
+            <div>
+              <div class="section-title">발견된 격차</div>
+              <div id="gapList" class="gaps"></div>
+              <p id="noGaps" class="empty" style="display:none;">격차가 발견되지 않았습니다. 현재 범위에서는 커버리지가 양호합니다.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    function escapeHtml(s) {
+      return String(s ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+    }
+
+    async function loadRadar(refresh) {
+      const loadingEl = document.getElementById('loadingMsg');
+      const errEl = document.getElementById('errMsg');
+      const resultEl = document.getElementById('result');
+      const scanBtn = document.getElementById('scanBtn');
+
+      loadingEl.style.display = 'block';
+      errEl.style.display = 'none';
+      resultEl.style.display = 'none';
+      scanBtn.disabled = true;
+
+      try {
+        const params = new URLSearchParams();
+        if (refresh) params.set('refresh', 'true');
+
+        const days = document.getElementById('days').value.trim();
+        const docType = document.getElementById('docType').value;
+        if (days) params.set('days', days);
+        if (docType) params.set('doc_type', docType);
+
+        const r = await fetch('/api/policy/issue-radar?' + params.toString(), { credentials: 'include' });
+        if (r.status === 401) {
+          window.location.href = '/login?next=' + encodeURIComponent(location.pathname);
+          return;
+        }
+        if (r.status === 403) {
+          errEl.textContent = '이 화면은 관리자만 사용할 수 있습니다.';
+          errEl.style.display = 'block';
+          return;
+        }
+        if (!r.ok) {
+          throw new Error('데이터를 불러오지 못했습니다. (' + r.status + ')');
+        }
+
+        const data = await r.json();
+        renderReport(data);
+      } catch (e) {
+        errEl.textContent = '오류: ' + (e.message || String(e));
+        errEl.style.display = 'block';
+      } finally {
+        loadingEl.style.display = 'none';
+        scanBtn.disabled = false;
+      }
+    }
+
+    function renderReport(data) {
+      const resultEl = document.getElementById('result');
+      const cs = data.coverage_summary || {};
+
+      const metaEl = document.getElementById('metaRow');
+      const scanTime = data.scan_time ? data.scan_time.replace('T', ' ').substring(0, 19) : '-';
+      metaEl.innerHTML =
+        '<span>스캔 시각: ' + escapeHtml(scanTime) + '</span>' +
+        '<span>문서: ' + (data.total_documents || 0) + '건</span>' +
+        '<span>공약: ' + (data.total_positions || 0) + '건</span>' +
+        (data.from_cache ? '<span class="cache-badge">캐시 사용</span>' : '');
+
+      const summaryEl = document.getElementById('summaryCards');
+      summaryEl.innerHTML =
+        '<div class="summary-card"><span class="num num-green">' + (cs.well_covered || 0) + '</span><div class="lbl">충분히 덮인 주제</div></div>' +
+        '<div class="summary-card"><span class="num num-yellow">' + (cs.weak_coverage || 0) + '</span><div class="lbl">약한 커버리지</div></div>' +
+        '<div class="summary-card"><span class="num num-red">' + (cs.no_position || 0) + '</span><div class="lbl">무공약 주제</div></div>' +
+        '<div class="summary-card"><span class="num num-blue">' + ((data.gaps || []).length) + '</span><div class="lbl">발견된 격차</div></div>';
+
+      renderHeatmap(data);
+
+      const gaps = data.gaps || [];
+      const gapListEl = document.getElementById('gapList');
+      const noGapsEl = document.getElementById('noGaps');
+
+      if (gaps.length === 0) {
+        gapListEl.innerHTML = '';
+        noGapsEl.style.display = 'block';
+      } else {
+        noGapsEl.style.display = 'none';
+        let html = '';
+        for (const gap of gaps) {
+          const isNoPos = gap.gap_type === 'no_position';
+          const badgeClass = isNoPos ? 'badge-red' : 'badge-yellow';
+          const badgeLabel = isNoPos ? '무공약' : '약한 커버리지';
+
+          const topicText = gap.topic || '미분류 주제';
+          html += '<div class="gap-item" data-topic="' + escapeHtml(topicText) + '">';
+          html += '<div class="gap-header">';
+          html += '<span class="gap-topic">' + escapeHtml(topicText) + '</span>';
+          html += '<div class="gap-badges">';
+          html += '<span class="badge ' + badgeClass + '">' + badgeLabel + '</span>';
+          html += '<span class="badge badge-blue">우선순위 ' + Math.round(gap.priority_score || 0) + '</span>';
+          html += '</div></div>';
+
+          html += '<div class="gap-meta">';
+          html += '관련 문서 ' + (gap.document_count || 0) + '건';
+          if (gap.recent_bill_count) html += ' · 최근 법안 ' + gap.recent_bill_count + '건';
+          if (gap.recent_commentary_count) html += ' · 최근 발언 ' + gap.recent_commentary_count + '건';
+          html += '</div>';
+
+          const drafterUrl = '/policy-create?topic=' + encodeURIComponent(topicText);
+          html += '<a href="' + drafterUrl + '" class="gap-action">이 주제로 초안 생성 →</a>';
+
+          const docs = gap.documents || [];
+          if (docs.length > 0) {
+            html += '<details class="gap-docs"><summary>관련 문서 보기 (' + docs.length + '건)</summary>';
+            for (const doc of docs) {
+              html += '<div class="doc-item">';
+              html += '<span class="doc-type">[' + escapeHtml(doc.doc_type || '문서') + ']</span> ';
+              html += escapeHtml(doc.title || '제목 없음');
+              html += ' <span class="doc-score">매칭 ' + escapeHtml(String(doc.best_match_score ?? '-')) + '</span>';
+              if (doc.best_match_title) html += ' · ' + escapeHtml(doc.best_match_title);
+              html += '</div>';
+            }
+            html += '</details>';
+          }
+
+          html += '</div>';
+        }
+        gapListEl.innerHTML = html;
+      }
+
+      resultEl.style.display = 'block';
+    }
+
+    function renderHeatmap(data) {
+      const baseTopics = [
+        '사법·검찰',
+        '정치개혁',
+        '경제',
+        '복지',
+        '교육',
+        '과학기술',
+        '안전·치안',
+        '국방',
+        '의료'
+      ];
+      const gaps = data.gaps || [];
+      const gapMap = new Map();
+      for (const gap of gaps) {
+        if (gap && gap.topic) gapMap.set(gap.topic, gap);
+      }
+
+      const el = document.getElementById('heatmap');
+      let html = '<div class="heatmap-grid">';
+
+      for (const topic of baseTopics) {
+        const gap = gapMap.get(topic);
+        let cls = 'heat-green';
+        let label = '충분히 커버됨';
+        let count = '';
+        if (gap) {
+          if (gap.gap_type === 'no_position') {
+            cls = 'heat-red';
+            label = '무공약';
+          } else {
+            cls = 'heat-yellow';
+            label = '약한 커버리지';
+          }
+          count = '문서 ' + (gap.document_count || 0) + '건';
+        }
+
+        html += '<div class="heatmap-cell ' + cls + '" data-topic="' + escapeHtml(topic) + '" data-has-gap="' + (gap ? 'true' : 'false') + '" onclick="onHeatmapClick(this)">';
+        html += '<div class="heatmap-topic">' + escapeHtml(topic) + '</div>';
+        html += '<div class="heatmap-count">' + label + (count ? ' · ' + count : '') + '</div>';
+        html += '</div>';
+      }
+
+      for (const gap of gaps) {
+        if (!gap || !gap.topic || baseTopics.includes(gap.topic)) continue;
+        const cls = gap.gap_type === 'no_position' ? 'heat-red' : 'heat-yellow';
+        const label = gap.gap_type === 'no_position' ? '무공약' : '약한 커버리지';
+        html += '<div class="heatmap-cell ' + cls + '" data-topic="' + escapeHtml(gap.topic) + '" data-has-gap="true" onclick="onHeatmapClick(this)">';
+        html += '<div class="heatmap-topic">' + escapeHtml(gap.topic) + '</div>';
+        html += '<div class="heatmap-count">' + label + ' · 문서 ' + (gap.document_count || 0) + '건</div>';
+        html += '</div>';
+      }
+
+      html += '</div>';
+      el.innerHTML = html;
+    }
+
+    function onHeatmapClick(cell) {
+      const topic = cell.dataset.topic;
+      const hasGap = cell.dataset.hasGap === 'true';
+
+      if (hasGap) {
+        // Scroll to the matching gap item and highlight it
+        const gapItems = document.querySelectorAll('.gap-item');
+        for (const item of gapItems) {
+          item.classList.remove('highlighted');
+          if (item.dataset.topic === topic) {
+            item.classList.add('highlighted');
+            item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => item.classList.remove('highlighted'), 2500);
+          }
+        }
+      } else {
+        // Well-covered topic — go to drafter with topic pre-filled
+        window.location.href = '/policy-create?topic=' + encodeURIComponent(topic);
+      }
+    }
+
+    function doScan() {
+      loadRadar(true);
+    }
+
+    loadRadar(false);
+  </script>
+</body>
+</html>

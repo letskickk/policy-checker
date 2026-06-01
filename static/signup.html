@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>회원가입 - 공약 멘토링</title>
+    <link rel="stylesheet" href="/static/css/common.css?v=2">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Pretendard Variable", "Pretendard", "Noto Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+      background: linear-gradient(160deg, #04162b 0%, #073053 55%, #0a3b69 100%);
+      min-height: 100vh;
+      color: #e2e8f0;
+      padding: 1.5rem 1rem 0;
+    }
+    .signup-shell {
+      width: min(100%, 420px);
+      margin: 0 auto;
+    }
+    .card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(148,163,184,0.18);
+      border-radius: 18px;
+      padding: 2rem;
+      width: 100%;
+    }
+    h1 { font-size: 1.5rem; margin-bottom: 1rem; color: #f8fafc; word-break: keep-all; }
+    .hint {
+      margin-bottom: 1.2rem;
+      font-size: 0.9rem;
+      color: #94a3b8;
+      line-height: 1.6;
+      word-break: keep-all;
+    }
+    .hint strong {
+      color: #ffedd5;
+      font-weight: 800;
+    }
+    label { display: block; font-weight: 700; margin-bottom: 0.5rem; }
+    select {
+      width: 100%;
+      padding: 0.75rem;
+      border-radius: 10px;
+      border: 1px solid rgba(148,163,184,0.28);
+      background: rgba(0,0,0,0.22);
+      color: #fff;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    select option { background: #0f172a; color: #fff; }
+    input {
+      width: 100%;
+      padding: 0.75rem;
+      padding-right: 2.75rem;
+      border-radius: 10px;
+      border: 1px solid rgba(148,163,184,0.28);
+      background: rgba(0,0,0,0.22);
+      color: #fff;
+      margin-bottom: 1rem;
+    }
+    input:-webkit-autofill {
+      -webkit-text-fill-color: #fff;
+      box-shadow: 0 0 0 1000px rgba(0,0,0,0.22) inset;
+    }
+    .pw-wrap { position: relative; margin-bottom: 1rem; }
+    .pw-wrap input { margin-bottom: 0; }
+    .pw-toggle {
+      position: absolute;
+      right: 0.6rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 0.9rem;
+      padding: 0.25rem;
+      width: auto;
+    }
+    .pw-toggle:hover { color: #fff; }
+    button[type="submit"] {
+      width: 100%;
+      padding: 0.9rem;
+      font-weight: 900;
+      background: #fff;
+      color: #0f172a;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+    button[type="submit"]:hover { background: #f1f5f9; }
+    .msg {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      background: rgba(255,107,107,0.14);
+      border-radius: 10px;
+      color: #ffd1d1;
+      font-size: 0.9rem;
+      display: none;
+    }
+    .links { margin-top: 1.5rem; font-size: 0.9rem; }
+    .links a { color: #ffb37a; text-decoration: none; font-weight: 700; }
+    .district-label-block { margin-bottom: 0.5rem; }
+    .district-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .district-row select {
+      flex: 1;
+      margin-bottom: 0;
+      min-width: 0;
+    }
+    @media (max-width: 480px) {
+      body { padding: 1rem 0.75rem 0; }
+      .card { padding: 1.5rem; border-radius: 16px; }
+      h1 { font-size: 1.35rem; }
+      .hint { font-size: 0.85rem; }
+      .district-row { flex-wrap: wrap; }
+      .district-row select { flex: 1 1 45%; min-width: 120px; }
+    }
+  </style>
+  <link rel="stylesheet" href="/static/reform-redesign.css" />
+</head>
+<body class="rf-auth-page">
+  <main class="signup-shell">
+  <div class="card">
+    <h1>회원가입</h1>
+    <p class="hint">
+      <strong>공천이 확정된 후보자만 가입 가능합니다.</strong><br>
+      <strong>공천시스템에 등록한 이메일</strong>을 입력해 주세요.<br>
+      가입 완료 후 <strong>이메일 인증</strong>과 <strong>관리자 승인</strong> 절차가 진행됩니다.
+    </p>
+    <form id="form">
+      <label>가입 유형</label>
+      <select name="election_position" id="election_position" required>
+        <option value="">선택하세요</option>
+        <option value="metro_mayor">광역 단체장</option>
+        <option value="regional_council">광역 의원</option>
+        <option value="local_mayor">기초 단체장</option>
+        <option value="local_council">기초 의원</option>
+        <option value="party_official">기타/당직자</option>
+      </select>
+      <div id="region_section">
+      <label>시·도</label>
+      <select name="region_code" id="region_code">
+        <option value="">선택하세요</option>
+      </select>
+      </div>
+      <div id="district_block" style="display:none;">
+        <label class="district-label-block">선거구 (시군구, 가나다)</label>
+        <div class="district-row">
+          <select id="district_code" aria-label="시군구">
+            <option value="">선택하세요</option>
+          </select>
+          <div id="district_sub_wrap" style="display:none;">
+            <select id="district_sub" aria-label="가나다">
+              <option value="">선택하세요</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <input type="hidden" name="region_name" id="region_name">
+      <input type="hidden" name="district_code" id="district_code_hidden">
+      <input type="hidden" name="district_name" id="district_name">
+      <label>이름</label>
+      <input type="text" name="name" required placeholder="홍길동" autocomplete="name">
+      <label>전화번호</label>
+      <input type="tel" name="phone" required placeholder="010-1234-5678" autocomplete="tel">
+      <label>이메일</label>
+      <input type="email" name="email" required placeholder="공천시스템 등록 이메일">
+      <label>비밀번호 (6자 이상)</label>
+      <div class="pw-wrap">
+        <input type="password" name="password" id="pw" required minlength="6" placeholder="6자 이상">
+        <button type="button" class="pw-toggle" aria-label="비밀번호 표시">보기</button>
+      </div>
+      <label>비밀번호 확인</label>
+      <div class="pw-wrap">
+        <input type="password" name="password_confirm" id="pw2" required minlength="6" placeholder="다시 입력">
+        <button type="button" class="pw-toggle" aria-label="비밀번호 확인 표시">보기</button>
+      </div>
+      <button type="submit">가입하기</button>
+    </form>
+    <div id="msg" class="msg"></div>
+    <div class="links">
+      이미 계정이 있으신가요? <a href="/login">로그인</a>
+    </div>
+  </div>
+  </main>
+  <script>
+    document.querySelectorAll('.pw-wrap').forEach(wrap => {
+      const input = wrap.querySelector('input');
+      const btn = wrap.querySelector('.pw-toggle');
+      if (!input || !btn) return;
+      btn.addEventListener('click', () => {
+        if (input.type === 'password') { input.type = 'text'; btn.textContent = '숨기기'; }
+        else { input.type = 'password'; btn.textContent = '보기'; }
+      });
+    });
+
+    const epEl = document.getElementById('election_position');
+    const rcEl = document.getElementById('region_code');
+    const rnEl = document.getElementById('region_name');
+    const dcEl = document.getElementById('district_code');
+    const subEl = document.getElementById('district_sub');
+    const subWrap = document.getElementById('district_sub_wrap');
+    const dcHidden = document.getElementById('district_code_hidden');
+    const dnEl = document.getElementById('district_name');
+    const districtBlock = document.getElementById('district_block');
+
+    function setDistrictHidden() {
+      const dc = (dcEl.value || '').trim();
+      const sub = (subEl.value || '').trim();
+      const dname = dcEl.selectedIndex >= 0 ? (dcEl.options[dcEl.selectedIndex].text || '').trim() : '';
+      if (!dc) { dcHidden.value = ''; dnEl.value = ''; return; }
+      const isSingle = !sub || sub === '단독';
+      dcHidden.value = isSingle ? dc : dc + ':' + sub;
+      dnEl.value = isSingle ? dname : dname + ' ' + sub;
+    }
+
+    async function loadRegions() {
+      try {
+        const r = await fetch('/api/signup/regions');
+        const data = await r.json();
+        if (!Array.isArray(data)) { rcEl.innerHTML = '<option value="">선택하세요</option>'; return; }
+        rcEl.innerHTML = '<option value="">선택하세요</option>' + data.map(x => `<option value="${(x.region_code||'')}">${(x.region_name||'').replace(/</g,'&lt;')}</option>`).join('');
+      } catch (e) { console.error('regions load error', e); }
+    }
+    loadRegions();
+
+    epEl.addEventListener('change', () => {
+      const pos = (epEl.value || '').toLowerCase();
+      const regionSection = document.getElementById('region_section');
+      if (pos === 'party_official') {
+        regionSection.style.display = 'none';
+        districtBlock.style.display = 'none';
+        dcEl.innerHTML = '<option value="">선택하세요</option>';
+        subEl.innerHTML = '<option value="">선택하세요</option>';
+        if (subWrap) subWrap.style.display = 'none';
+        rcEl.value = ''; rnEl.value = ''; dcHidden.value = ''; dnEl.value = '';
+      } else if (pos === 'metro_mayor') {
+        regionSection.style.display = 'block';
+        districtBlock.style.display = 'none';
+        dcEl.innerHTML = '<option value="">선택하세요</option>';
+        subEl.innerHTML = '<option value="">선택하세요</option>';
+        if (subWrap) subWrap.style.display = 'none';
+        dcHidden.value = ''; dnEl.value = '';
+      } else {
+        regionSection.style.display = 'block';
+        districtBlock.style.display = 'block';
+        if (rcEl.value) loadDistricts(rcEl.value);
+      }
+    });
+
+    rcEl.addEventListener('change', () => {
+      const sel = rcEl.options[rcEl.selectedIndex];
+      rnEl.value = sel ? (sel.textContent || sel.text || '') : '';
+      dcEl.innerHTML = '<option value="">선택하세요</option>';
+      subEl.innerHTML = '<option value="">선택하세요</option>';
+      if (subWrap) subWrap.style.display = 'none';
+      dcHidden.value = ''; dnEl.value = '';
+      if (epEl.value && epEl.value !== 'metro_mayor') loadDistricts(rcEl.value);
+    });
+
+    async function loadDistricts(regionCode) {
+      if (!regionCode) return;
+      const pos = epEl.value || '';
+      try {
+        const r = await fetch('/api/signup/districts?region_code=' + encodeURIComponent(regionCode) + '&election_position=' + encodeURIComponent(pos));
+        const data = await r.json();
+        const list = Array.isArray(data) ? data : (data.items || []);
+        dcEl.innerHTML = '<option value="">선택하세요</option>' + list.map(x => `<option value="${(x.district_code||'').replace(/"/g,'&quot;')}">${(x.district_name||'').replace(/</g,'&lt;')}</option>`).join('');
+        subEl.innerHTML = '<option value="">선택하세요</option>';
+        dcHidden.value = ''; dnEl.value = '';
+      } catch (e) { console.error('districts load error', e); dcEl.innerHTML = '<option value="">선택하세요</option>'; subEl.innerHTML = '<option value="">선택하세요</option>'; }
+    }
+
+    let districtSubLoading = false;
+    dcEl.addEventListener('change', () => {
+      const dc = (dcEl.value || '').trim();
+      subEl.innerHTML = '<option value="">선택하세요</option>';
+      if (subWrap) subWrap.style.display = 'none';
+      dcHidden.value = ''; dnEl.value = '';
+      districtSubLoading = false;
+      if (!dc) return;
+      const pos = (epEl.value || '').trim();
+      districtSubLoading = true;
+      fetch('/api/signup/district-sub?district_code=' + encodeURIComponent(dc) + '&election_position=' + encodeURIComponent(pos))
+        .then(r => r.json())
+        .then(list => {
+          let arr = Array.isArray(list) ? list : [];
+          // 선택지가 2개 이상이면 "단독" 제외(백엔드와 동일 로직)
+          if (arr.length > 1) arr = arr.filter(x => (x.sub_code || '').trim() !== '단독' && (x.sub_name || '').trim() !== '단독');
+          subEl.innerHTML = '<option value="">선택하세요</option>' + arr.map(x => `<option value="${(x.sub_code||'').replace(/"/g,'&quot;')}">${(x.sub_name||'').replace(/</g,'&lt;')}</option>`).join('');
+          if (arr.length > 1) {
+            if (subWrap) subWrap.style.display = '';
+          } else {
+            if (arr.length === 1) subEl.selectedIndex = 1;
+          }
+          setDistrictHidden();
+          districtSubLoading = false;
+        })
+        .catch(e => { console.error('district-sub load error', e); setDistrictHidden(); districtSubLoading = false; });
+    });
+
+    subEl.addEventListener('change', setDistrictHidden);
+
+    document.getElementById('form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const pw = document.getElementById('pw').value;
+      const pw2 = document.getElementById('pw2').value;
+      const msg = document.getElementById('msg');
+      msg.style.display = 'none';
+      if (pw !== pw2) {
+        msg.textContent = '비밀번호가 일치하지 않습니다.';
+        msg.style.display = 'block';
+        return;
+      }
+      const pos = (epEl.value || '').toLowerCase();
+      if (pos !== 'party_official' && !(rcEl.value || '').trim()) {
+        msg.textContent = '시·도를 선택하세요.';
+        msg.style.display = 'block';
+        return;
+      }
+      if (districtBlock.style.display !== 'none' && !(dcHidden.value || '').trim()) {
+        msg.textContent = '선거구(시군구)를 선택하세요.';
+        msg.style.display = 'block';
+        return;
+      }
+      if (districtSubLoading) {
+        msg.textContent = '선거구 정보를 불러오는 중입니다. 잠시 후 다시 시도하세요.';
+        msg.style.display = 'block';
+        return;
+      }
+      if (subWrap && subWrap.style.display !== 'none' && !(subEl.value || '').trim()) {
+        msg.textContent = '세부 선거구(가·나·다 등)를 선택하세요.';
+        msg.style.display = 'block';
+        return;
+      }
+      const fd = new FormData(e.target);
+      const body = {
+        name: fd.get('name'),
+        phone: fd.get('phone'),
+        email: fd.get('email'),
+        password: fd.get('password'),
+        election_position: fd.get('election_position') || '',
+        region_code: fd.get('region_code') || '',
+        region_name: fd.get('region_name') || '',
+        district_code: fd.get('district_code') || '',
+        district_name: fd.get('district_name') || '',
+      };
+      try {
+        const r = await fetch('/api/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) { msg.textContent = d.detail || '가입 실패'; msg.style.display = 'block'; return; }
+        msg.style.background = 'rgba(34,197,94,0.2)'; msg.style.color = '#86efac';
+        msg.textContent = d.message || '가입 완료. 이메일 인증 후 관리자 승인을 기다려 주세요.';
+        msg.style.display = 'block';
+      } catch (e) { msg.textContent = '서버 연결 실패'; msg.style.display = 'block'; }
+    });
+  </script>
+  <div data-shared-footer></div>
+  <script src="/static/js/shared-footer.js?v=2"></script>
+</body>
+</html>
