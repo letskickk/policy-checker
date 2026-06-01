@@ -1,8 +1,8 @@
 # policy-checker — AI 공약검증 / AI Pledge Checker
 
-후보의 **선거 공약**을 입력하면, 당 정강·정책과의 **부합 여부**, 다른 후보 공약과의 **중복·유사도**, 그리고 **보완점**을 AI가 즉시 채점·리포트로 돌려주는 한국어 정책검증 파이프라인입니다.
+후보의 **선거 공약을 작성하고 검증하는** 한국어 AI 파이프라인입니다. 주제만 입력하면 근거를 모아 정책 초안을 **생성**하고, 작성된 공약을 당 정강·정책과의 **부합 여부**·다른 후보와의 **중복·유사도**·**보완점** 기준으로 즉시 **채점·리포트**합니다.
 
-> An open-source Korean-language pipeline that verifies election pledges with RAG search and LLM scoring — checking each pledge against a party platform, detecting overlap with other candidates, and returning a graded report with cited evidence.
+> An open-source Korean-language pipeline that both **drafts and verifies** election pledges. It generates policy drafts from a topic (research + RAG + LLM), then scores any pledge against a party platform with RAG search and LLM grading — detecting overlap with other candidates and returning a graded report with cited evidence.
 
 ---
 
@@ -20,6 +20,7 @@
 
 | 기능 | 설명 |
 |------|------|
+| **공약·정책 초안 생성** | 주제·키워드를 입력하면 리서치 어시스턴트가 근거를 모으고, RAG 컨텍스트 + GPT로 **정책포지션·지역공약·입법취지서·논평·메시지** 초안을 스트리밍 생성 (`/api/tools/generate/stream`, `/api/policy/draft`) |
 | **당 방향 부합 점검** | 정강·정책·과거 공약을 기준으로 공약의 부합 여부를 5개 축(실현가능성·정합성·전달력 등)으로 채점하고 보완 체크리스트 제공 |
 | **벡터 검색 기반 근거 인용** | OpenAI 임베딩 + FAISS / OpenAI Vector Store로 관련 근거 스니펫을 검색해 **출처와 함께** 인용 (`POST /api/pledge/verify`) |
 | **중복·유사 탐지** | 다른 후보·과거 당선인 공약 DB와 비교해 유사 공약을 제시하고 차별화 포인트 제안 |
@@ -28,19 +29,23 @@
 ## 🏗️ 아키텍처
 
 ```
-공약 입력
-   │
-   ├─▶ 청킹·임베딩 (text-embedding-3-large)
-   │        └─ FAISS  또는  OpenAI Vector Store (File Search)
-   │
-   ├─▶ RAG 검색: 정강정책 · 우리당 공약 · 타지역/과거 공약
-   │
-   └─▶ LLM 채점 (GPT): 5축 점수 + 근거 인용 + 상충 분석 + 개선 제안
-              │
-              └─▶ JSON 리포트 (summary / platform / pledges / conflicts / improvements)
+[ 생성 ]  주제 입력 ─▶ 리서치 어시스턴트(근거 수집) + RAG 컨텍스트 ─▶ GPT 초안 생성(스트리밍)
+                                                                       └─▶ 정책포지션·지역공약·입법취지서·논평·메시지
+
+[ 검증 ]  공약 입력
+            │
+            ├─▶ 청킹·임베딩 (text-embedding-3-large)
+            │        └─ FAISS  또는  OpenAI Vector Store (File Search)
+            │
+            ├─▶ RAG 검색: 정강정책 · 우리당 공약 · 타지역/과거 공약
+            │
+            └─▶ LLM 채점 (GPT): 5축 점수 + 근거 인용 + 상충 분석 + 개선 제안
+                       │
+                       └─▶ JSON 리포트 (summary / platform / pledges / conflicts / improvements)
 ```
 
 - **백엔드**: FastAPI (`backend/main.py`)
+- **생성**: `backend/policy_drafter.py`, `backend/research_assistant.py`, `backend/tools_routes.py`
 - **검색**: `backend/embeddings.py`, `backend/vector_index.py`, `backend/openai_vector_store.py`
 - **채점**: `backend/check_service.py`, `backend/prompts.py`
 - **데이터 연동**: 공공데이터포털(NEC) 당선인·선거공약 API (`backend/national_assembly_api.py`, `backend/public_data_api.py`)
