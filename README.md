@@ -1,8 +1,8 @@
-# policy-checker — AI 공약검증 / AI Pledge Checker
+# policy-checker — AI 공약 작성·검증
+
+**한국어** · **[English](README.en.md)**
 
 후보의 **선거 공약을 작성하고 검증하는** 한국어 AI 파이프라인입니다. 주제만 입력하면 근거를 모아 정책 초안을 **생성**하고, 작성된 공약을 당 정강·정책과의 **부합 여부**·다른 후보와의 **중복·유사도**·**보완점** 기준으로 즉시 **채점·리포트**합니다.
-
-> An open-source Korean-language pipeline that both **drafts and verifies** election pledges. It generates policy drafts from a topic (research + RAG + LLM), then scores any pledge against a party platform with RAG search and LLM grading — detecting overlap with other candidates and returning a graded report with cited evidence.
 
 ---
 
@@ -10,9 +10,7 @@
 
 이 도구는 데모가 아니라 **실제 정치 현장에서 쓰였습니다.** 개혁신당(Reform Party)이 **2026년 지방선거 출마자들의 공약을 검증·보정**하는 데 직접 활용했습니다. 후보가 작성한 공약을 당 정강·과거 당선인 공약과 대조해 실현가능성·정합성을 점검하고, 차별화 포인트를 제안하는 내부 도구로 운영됐습니다.
 
-그동안 정당 내부에서 비공개로만 돌던 '공약 검증'을 오픈소스로 공개합니다. 누구나 — 시민·정당·후보 — 공약의 품질을 **데이터로 검증**할 수 있게 하는 시빅테크 인프라를 지향합니다.
-
-> Not a demo: this tool was used in production by Korea's Reform Party to vet pledges from its 2026 local-election candidates. Open-sourcing it makes data-driven pledge verification — previously locked inside a party — available to anyone.
+그동안 정당 내부에서 비공개로만 돌던 '공약 작성·검증'을 오픈소스로 공개합니다. 누구나 — 시민·정당·후보 — 공약의 품질을 **데이터로 검증**할 수 있게 하는 시빅테크 인프라를 지향합니다.
 
 ---
 
