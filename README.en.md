@@ -18,11 +18,13 @@ Open-sourcing it makes data-driven pledge drafting and verification — previous
 
 | Feature | Description |
 |---|---|
-| **Pledge / policy drafting** | From a topic or keywords, a research assistant gathers evidence and GPT streams a draft (policy position, regional pledge, legislative rationale, commentary, message) via `/api/tools/generate/stream`, `/api/policy/draft` |
-| **Party-alignment check** | Scores a pledge against the platform and past pledges on 5 axes (feasibility, consistency, deliverability, etc.) with a fix-up checklist |
-| **Evidence-cited RAG search** | Retrieves supporting snippets via OpenAI embeddings + FAISS / OpenAI Vector Store and cites them **with sources** (`POST /api/pledge/verify`) |
-| **Overlap / similarity detection** | Compares against other candidates' and past winners' pledges and suggests differentiation |
-| **Access control & quotas** | Sign-up, admin approval, daily/monthly quotas, rate limiting, and result caching to manage API cost |
+| **① Pledge / policy drafting** | From just a topic and region, a research assistant pulls evidence from National Assembly & local-council records, statistics, and opinion polls, then RAG context + GPT streams a draft (policy position, regional pledge, legislative rationale, commentary, message) with citations (`/api/tools/generate/stream`, `/api/policy/draft`) |
+| **② 5-axis quantitative scoring (out of 100)** | Scores a pledge on **platform alignment (20) · policy-design completeness (30) · feasibility (20) · specificity (15) · deliverability (15)** and produces strengths/fix-up checklist with an overall grade |
+| **③ Evidence-cited RAG verification** | Vector-searches the platform, own-party pledges, and other-region/past winners' pledges to **cite supporting snippets with sources** and report alignment/conflicts (`POST /api/pledge/verify`) |
+| **④ Overlap detection & candidate ranking** | Compares against other candidates' and past winners' pledges, suggests differentiation, and provides a per-candidate pledge-score leaderboard |
+| **⑤ Issue radar (hot-topic discovery)** | Extracts notable issues from polls, commentary, bills, and local agenda to recommend pledge topics |
+| **⑥ Automated data ingestion (SSOT)** | Periodically ingests Assembly bills, NESDC polls, commentary, and pledge PDFs into a single source of truth and auto-syncs the Vector Store |
+| **⑦ Operations & access control** | Sign-up, admin approval, applicant verification, daily/monthly quotas, rate limiting, and result caching to manage cost and access |
 
 ## 🏗️ Architecture
 
