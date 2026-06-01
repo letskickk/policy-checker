@@ -102,4 +102,4 @@ ADMIN_EMAILS=admin@example.com    # 자동 승인 관리자
 
 ## 📄 라이선스
 
-[MIT](LICENSE) © 2026 Kwon Sol ([@letskickk](https://github.com/letskickk))
+[MIT](LICENSE) © 2026 개혁신당 정책국 (Reform Party Policy Bureau)
